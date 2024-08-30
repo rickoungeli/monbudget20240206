@@ -81,7 +81,6 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
         }
     };
 
-    //Fonction pour tester le nombre de répétition
     const checkNombreDeRepetition = (value) => {
         setNombreDeRepetition(value)
         if(checkbox == true){ 
@@ -128,26 +127,40 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
     
     //Fonction pour transformer une prévision en une opération effectuée
     const handleTransformPrevision = () => {
-        data.append('function', 'transformPrevision')
-        data.append('idoperation', showSaisieForm.operationItem.id)
-        data.append('libelle', libelle)
-        data.append('dateops', dateOps)
-        data.append('idtypeops', idTypeOps)
-        data.append('idcategorie', idCategorie)
-        data.append('montant', montant)
-        axios.post(`${process.env.REACT_APP_API_URL}depenses.php`, data)
-        .then(res => {
-            if(res.data.status == 400){ 
-                setAlert('Prévision transformée avec succès')
-                //dispatch(LOAD_OPERATIONS(true))
-                //On supprime la prévision dans le store
-                
-                setTimeout(()=> {
-                    toggleSaisieForm(false, 'deleteItemFromStore', showSaisieForm.operationItem)
-                }, 2000)             
-            }
-        })
-        .catch(err => setAlert("L'opération a echoué "+ err))
+        const checkLibelle1 = checkLibelle(libelle)
+        const checkDateOps1 = checkDateOps(dateOps)
+        const checkMontant1 = checkMontant(montant)
+
+        const checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1]
+
+        if ( arrayCompare(checkResultArray, [false, false, false]) !== false) {
+            
+            data.append('function', 'transformPrevision')
+            data.append('idoperation', showSaisieForm.operationItem.id)
+            data.append('libelle', libelle)
+            data.append('dateops', dateOps)
+            data.append('idtypeops', idTypeOps)
+            data.append('idcategorie', idCategorie)
+            data.append('montant', montant)
+            //for (let [key, value] of data.entries()){console.log(key, value);}
+            axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
+            .then(res => {
+                if(res.data.status == 400){ 
+                    setAlert('Prévision transformée avec succès')
+                    //On supprime la prévision dans le store
+                    setTimeout(()=> {
+                        toggleSaisieForm(false, 'deleteItemFromStore', showSaisieForm.operationItem)
+                    }, 2000)             
+                }
+            })
+            .catch(err => {
+                setAlert("L'opération a echoué ")
+                // setTimeout(()=> {
+                //     setAlert("")
+                // }, 3000) 
+            })
+            
+        }
     }
 
     //Fonction pour supprimer une opération de la bdd
@@ -180,6 +193,7 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
         const checkJourDuMois1 = checkJourDuMois(jourDuMois)
         const checkNombreDeRepetition1 = checkNombreDeRepetition(nombreDeRepetition)
 
+        //const checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, checkJourDuMois1, checkNombreDeRepetition1]
         const checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, checkJourDuMois1, checkNombreDeRepetition1]
         
         if ( arrayCompare(checkResultArray, [false, false, false, false, false]) !== false) {
@@ -312,9 +326,10 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
 
                             {/* Libellé opération */}
                             <div className='Libelle'>
-                                <label className='text-light'>Libellé : </label> 
+                                <label htmlFor="libelle" className='text-light'>Libellé : </label> 
                                 <input
                                     type='text' 
+                                    id='libelle'
                                     value = {libelle}
                                     onChange={(e) => setLibelle(e.target.value)} 
                                     className={
@@ -327,9 +342,10 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                             
                             {/* Date de l'opération */}
                             <div className='dateOps'>
-                                <label className='text-light'>Date : </label> 
+                                <label htmlFor="dateOps" className='text-light'>Date : </label> 
                                 <input
                                     type="date" 
+                                    id="dateOps"
                                     value={dateOps}
                                     onChange={(e) => setDateOps(e.target.value)} 
                                     className={
@@ -342,9 +358,10 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
 
                             {/* Coût de l'opération */}
                             <div className='montant'>
-                                <label className='text-light'>Montant : </label> 
+                                <label htmlFor="montant" className='text-light'>Montant : </label> 
                                 <input
                                     type='text'
+                                    id="montant"
                                     value = {montant}
                                     onChange={(e) => setMontant(e.target.value)} 
                                     className={
@@ -373,10 +390,11 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
 
                             {/* Date de l'opération récursive */}
                             {checkbox && 
-                            <div className='operation-recursive d-flex pt-2'>
-                                <label className='text-light pe-2'>Enregistrer tous les  </label> 
+                            <div className='recursive-date d-flex pt-2'>
+                                <label htmlFor="recursiveDate" className='text-light pe-2'>Enregistrer tous les  </label> 
                                 <input
                                     type='text'
+                                    id='recursive'
                                     value = {jourDuMois}
                                     onChange={(e) => checkJourDuMois(e.target.value)} 
                                     className={checkbox == true && jourDuMois == ''? "form-control w-25 border border-2 border-danger text-center" : "form-control w-25 border border-2 border-success text-center" }
@@ -388,10 +406,11 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
 
                              {/* Nombre de répétition de l'opération récursive */}
                              {checkbox && 
-                             <div className='operation-recursive d-flex pt-2'>
-                                <label className='text-light pe-2'>Nombre de répétition   </label> 
+                             <div className='recursive-number d-flex pt-2'>
+                                <label htmlFor="recursiveNumber" className='text-light pe-2'>Nombre de répétition   </label> 
                                 <input
                                     type='text'
+                                    id='recursiveNumber'
                                     value = {nombreDeRepetition}
                                     onChange={(e) => checkNombreDeRepetition(e.target.value)} 
                                     className={checkbox == true && nombreDeRepetition != '' && nombreDeRepetition>0 && nombreDeRepetition <= 25? "form-control w-25 border border-2 border-success text-center" : "form-control w-25 border border-2 border-danger text-center" }
@@ -403,7 +422,7 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                             <div className='d-flex justify-content-center gap-2 my-2'>
     
                                     {showSaisieForm.operationType=='confirmPrevision' && <button onClick={()=>{handleTransformPrevision()}} className='btn btn-primary'>Enregistrer</button>}
-                                    {showSaisieForm.operationType=='newOperation' && <button onClick={()=>{handleSubmit()}} className='btn btn-primary'>Enregistrer</button>}
+                                    {showSaisieForm.operationType=='newOperation' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
                                     {showSaisieForm.operationType=='deletePrevision' && <button onClick={()=>{handleDelete()}} className='btn btn-danger'>Oui</button>}
                                     {showSaisieForm.operationType=='editOperation' && <button onClick={()=>{handleSubmit()}} className='btn btn-primary'>Modifier</button>}
 
