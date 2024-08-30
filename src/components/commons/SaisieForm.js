@@ -192,9 +192,14 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
         const checkMontant1 = checkMontant(montant)
         const checkJourDuMois1 = checkJourDuMois(jourDuMois)
         const checkNombreDeRepetition1 = checkNombreDeRepetition(nombreDeRepetition)
-
+        
         //const checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, checkJourDuMois1, checkNombreDeRepetition1]
-        const checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, checkJourDuMois1, checkNombreDeRepetition1]
+        let checkResultArray = []
+        if(checkbox) {
+            checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, checkJourDuMois1, checkNombreDeRepetition1]
+        } else {
+            checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, false, false]
+        }
         
         if ( arrayCompare(checkResultArray, [false, false, false, false, false]) !== false) {
             showSaisieForm.operationType=='editOperation'? data.append('idoperation', showSaisieForm.operationItem.id):null
@@ -209,6 +214,7 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
             showSaisieForm.operationType == 'newOperation' &&checkbox && data.append('function', 'insertRecursivOperation')
             showSaisieForm.operationType == 'editOperation' && data.append('function', 'editOperation')
             
+            //for (let [key, value] of data.entries()){console.log(key, value);}
             axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
             .then(res => {
                 //console.log(res);
