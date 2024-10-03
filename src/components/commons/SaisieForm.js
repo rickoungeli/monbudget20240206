@@ -46,7 +46,7 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
     };
 
     const checkLibelle = (libelle) => {
-        if (!libelle) {
+        if (libelle.trim() === "") {
             setLibelleMessage("Le libelle est obligatoire");
             return true;
         } else if (libelle.length < 2 || libelle.length > 100) {
