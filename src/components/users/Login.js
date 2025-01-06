@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-//import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { AiOutlineMail } from 'react-icons/ai';
@@ -54,7 +53,8 @@ const Login = () => {
     
     //Fonction pour récupérer et mettre en store la liste des mois
     const getMonths = () => {
-        axios.get(`${process.env.REACT_APP_API_URL}operations.php?function=getMonths`)
+        // axios.get(`${process.env.REACT_APP_API_URL}operations.php?function=getMonths`)
+        axios.get(`http://rickou.fr/dao/operations.php?function=getMonths`)
         .then (res => {
             localStorage.setItem('fmonth', JSON.stringify(res.data))
         })
@@ -65,7 +65,8 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        axios.get(`${process.env.REACT_APP_API_URL}user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
+        //axios.get(`${process.env.REACT_APP_API_URL}user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
+        axios.get(`http://rickou.fr/dao/user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
         .then(res => {
             console.log(res);
             if(res.status == 500) {

@@ -170,8 +170,6 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
         data.append('idoperation', operationId)
         axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
         .then(res => {
-            console.log(res)
-            
             if(res.data.status == 300){ 
                 setAlert('Opération supprimée avec succès')
                //On ferme le formulaire et on supprime l'item dans le store du parent

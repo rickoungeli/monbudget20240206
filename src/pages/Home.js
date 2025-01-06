@@ -1,16 +1,14 @@
 import React, {useState} from 'react';
 import { Link } from 'react-router-dom';
-import { FaCreativeCommonsRemix } from "react-icons/fa";
 
 const Home = () => {
-    const [page, setPage] = useState('')
     const [user, setUser] = useState(localStorage.getItem('userId'))
     const [login, setLogin] = useState(localStorage.getItem('userPseudo')?localStorage.getItem('userPseudo'):'')
     
 
     return (
         <div>
-            <h1 className='text-center mt-1'>BIENVENUE {login.toUpperCase()}</h1>
+            <h1 className='text-center mt-1'>BIENVENUEEEE {login.toUpperCase()}</h1>
             <section className='mt-4 p-3'>
                 
                 {user && <>
