@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-
-
-//Import from react-icons
 import { AiFillExclamationCircle } from 'react-icons/ai';
 import { useCheckLibelle } from '../../utils/controllers';
 import { InputText } from '../formComponents/InputText';
@@ -262,8 +259,6 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
         }
     }
 
-
-
     return (
         <div className="saisie-form overlay">
             <div className="modal-dialog bg-dark w-100 mx-auto">
@@ -391,37 +386,6 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
 
                                 </div>
                             }
-
-                            {/* Date de l'opération récursive */}
-                            {checkbox && 
-                            <div className='recursive-date d-flex pt-2'>
-                                <label htmlFor="recursiveDate" className='text-light pe-2'>Enregistrer tous les  </label> 
-                                <input
-                                    type='text'
-                                    id='recursive'
-                                    value = {jourDuMois}
-                                    onChange={(e) => checkJourDuMois(e.target.value)} 
-                                    className={checkbox == true && jourDuMois == ''? "form-control w-25 border border-2 border-danger text-center" : "form-control w-25 border border-2 border-success text-center" }
-                                />
-                                
-                            </div>
-                            }
-                            {checkbox && jourDuMoisMessage && <span className='text-danger'>{jourDuMoisMessage}</span>}
-
-                             {/* Nombre de répétition de l'opération récursive */}
-                             {checkbox && 
-                             <div className='recursive-number d-flex pt-2'>
-                                <label htmlFor="recursiveNumber" className='text-light pe-2'>Nombre de répétition   </label> 
-                                <input
-                                    type='text'
-                                    id='recursiveNumber'
-                                    value = {nombreDeRepetition}
-                                    onChange={(e) => checkNombreDeRepetition(e.target.value)} 
-                                    className={checkbox == true && nombreDeRepetition != '' && nombreDeRepetition>0 && nombreDeRepetition <= 25? "form-control w-25 border border-2 border-success text-center" : "form-control w-25 border border-2 border-danger text-center" }
-                                />
-                            </div>}
-                            {checkbox && nombreDeRepetitionMessage && <span className='text-danger'>{nombreDeRepetitionMessage}</span>}
-
 
                             <div className='d-flex justify-content-center gap-2 my-2'>
     

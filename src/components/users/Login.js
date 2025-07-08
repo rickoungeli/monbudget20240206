@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { AiOutlineMail } from 'react-icons/ai';
@@ -53,8 +53,8 @@ const Login = () => {
     
     //Fonction pour récupérer et mettre en store la liste des mois
     const getMonths = () => {
-        // axios.get(`${process.env.REACT_APP_API_URL}operations.php?function=getMonths`)
-        axios.get(`http://rickou.fr/dao/operations.php?function=getMonths`)
+        axios.get(`${process.env.REACT_APP_API_URL}operations.php?function=getMonths`)
+        //axios.get(`http://rickou.fr/dao/operations.php?function=getMonths`)
         .then (res => {
             localStorage.setItem('fmonth', JSON.stringify(res.data))
         })
@@ -65,49 +65,55 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        //axios.get(`${process.env.REACT_APP_API_URL}user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
-        axios.get(`http://rickou.fr/dao/user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
+        axios.get(`${process.env.REACT_APP_API_URL}user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
+        //axios.get(`https://rickou.fr/dao/user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
         .then(res => {
             console.log(res);
-            if(res.status == 500) {
-                setAlert("Un problème est survenu...")
-            } 
-            console.log(res.status);
-            if(res.status != 200) {
-                setAlert("Un problème est survenu...")
-            } else {
-                if (res.data.status == 404) {
-                    setAlert("pseudo ou mot de passe incorrect")
+            if(res.data){
+            
+                if(res.status == 500) {
+                    setAlert("Un problème est survenu...")
+                } 
+                //console.log(res.status);
+                if(res.status != 200) {
+                    setAlert("Un problème est survenu...")
                 } else {
-                    //Mise en cache du user
-                    localStorage.setItem('userId', res.data.id)
-                    localStorage.setItem('userPseudo', res.data.pseudo)
-                    localStorage.setItem('isConnected', 'true')
+                    if (res.data.status == 404) {
+                        setAlert("pseudo ou mot de passe incorrect")
+                    } else {
+                        //Mise en cache du user
+                        localStorage.setItem('userId', res.data.user.id)
+                        localStorage.setItem('userPseudo', res.data.user.pseudo)
+                        localStorage.setItem('isConnected', 'true')
 
-                    let date = new Date
-                    let currentMonth = date.getMonth() + 1
-                    let currentYear = date.getFullYear()
-                    localStorage.setItem('month', currentMonth < 10 ? '0' + currentMonth : currentMonth)
-                    localStorage.setItem('year', currentYear)
-                    localStorage.setItem('dateFrom', setFirstDay(currentMonth, currentYear))
-                    localStorage.setItem('dateTo', setLastDay(currentMonth, currentYear))
-                    localStorage.setItem('selectedOps', 'D')
+                        let date = new Date
+                        let currentMonth = date.getMonth() + 1
+                        let currentYear = date.getFullYear()
+                        localStorage.setItem('month', currentMonth < 10 ? '0' + currentMonth : currentMonth)
+                        localStorage.setItem('year', currentYear)
+                        localStorage.setItem('dateFrom', setFirstDay(currentMonth, currentYear))
+                        localStorage.setItem('dateTo', setLastDay(currentMonth, currentYear))
+                        localStorage.setItem('selectedOps', 'D')
 
-                    //Récupération et mise en store de la liste des mois
-                    getMonths()
+                        //Récupération et mise en store de la liste des mois
+                        getMonths()
 
-                    //Récupération et mise en store de la liste des opérations
-                    getTypesOperations()
+                        //Récupération et mise en store de la liste des opérations
+                        getTypesOperations()
 
-                    //Récupération et mise en store de la liste des categories
-                    getCategories(res.data.id)
-                        
-                }
+                        //Récupération et mise en store de la liste des categories
+                        getCategories(res.data.user.id)
+                            
+                    }
 
+                } 
+            } 
+            else {
+                setAlert('Echec: Un problème est survenu... ')
             }
         })
         .catch (error => {
-            console.log(error.response.status);
+            console.log(error);
             setAlert('Echec: connexion à la base de donnée impossible! ')
         })
     }
