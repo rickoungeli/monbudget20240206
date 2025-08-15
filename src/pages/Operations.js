@@ -89,14 +89,15 @@ const Operations = ({fonctionnalite, selectedOps, dateFrom, dateTo, trierPar}) =
             
         } 
 
-        if (value==false && operationType=='addItemToStore' && operationItem !='') {
+        //Ajout de l'item enregistré dans le table des opérations
+        if (value==true && operationType=='addItemToStore' && operationItem !='') {
             let newOperationsList = []  
             newOperationsList = operationsList
             newOperationsList.push(operationItem)
             setOperationsList(newOperationsList)
             setShowSaisieForm({
-                value:false, 
-                operationType:'', 
+                value:true, 
+                operationType:'newOperation', 
                 operationItem:''
             })
         } 

@@ -61,24 +61,62 @@ export const htmlEntities = (str) => {
 };
 
 
-export const useCheckLibelle = (libelle) => {
-    const [libelleMessage, setLibelleMessage] = useState('')
-    if (!libelle) {
-        setLibelleMessage("Le libelle est obligatoire");
-        return true;
-    } else if (libelle.length < 2 || libelle.length > 100) {
-        setLibelleMessage("Veuillez taper un libelle valide svp");
-        return true;
-    } else {
-        setLibelleMessage("");
-        return false;
-    }
-};
+// export const useCheckLibelle = (libelle) => {
+//     const [libelleMessage, setLibelleMessage] = useState('')
+//     if (!libelle) {
+//         setLibelleMessage("Le libelle est obligatoire");
+//         return true;
+//     } else if (libelle.length < 2 || libelle.length > 100) {
+//         setLibelleMessage("Veuillez taper un libelle valide svp");
+//         return true;
+//     } else {
+//         setLibelleMessage("");
+//         return false;
+//     }
+// };
 
 //Fonction pour récupérer la valeur de l'élément sélectionné dans un combobox
 export const valueReturner = (id, liste) => {
     let newTable = ''
     return newTable
 }
+
+//Fonction pour comparer deux tableaux
+export const arrayCompare = (arrayA, arrayB) => {
+    for (let i = 0; i < arrayA.length; i++) {
+        if (arrayA[i] !== arrayB[i]) {
+            return false;
+        }
+    }
+};
+
+
+export const checkLibelle = (libelle) => {
+    if (libelle.trim() === "") {
+        return {value:true, message: "Le libelle est obligatoire"};
+    } else if (libelle.length < 2 || libelle.length > 100) {
+        return {value:true, message: "Veuillez taper un libelle valide svp"};
+    } else {
+        return {value:false, message: ''};
+    }
+};  
+
+export const checkDateOps = (dateOps) => {
+    if (!dateOps) {
+        return {value:true, message: "La date est obligatoire"};
+    } else {
+        return {value:false, message: ''};
+    }
+};
+
+export const checkMontant = (montant) => {
+    if (montant=="") {
+        return {value:true, message: "Le montant est obligatoire"};
+    } else if (montant <= 0) {
+        return {value:true, message: "Le montant doit être supérieur à zéro"};
+    } else {
+        return {value:false, message: ''};
+    }
+};
 
  

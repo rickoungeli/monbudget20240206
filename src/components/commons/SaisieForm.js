@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { AiFillExclamationCircle } from 'react-icons/ai';
-import { useCheckLibelle } from '../../utils/controllers';
-import { InputText } from '../formComponents/InputText';
+import { arrayCompare } from '../../utils/controllers';
+import { checkLibelle } from '../../utils/controllers';
+import { checkDateOps } from '../../utils/controllers';
+import { checkMontant } from '../../utils/controllers';
 
 
 const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
@@ -10,7 +12,6 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
     const operations = JSON.parse(localStorage.getItem('typeOperations'));
     const categories = JSON.parse(localStorage.getItem('categories'));
 
-    
     const todaysdate = (new Date().toLocaleDateString()).split('/');
     const todays = todaysdate[2]+'-'+todaysdate[1]+'-'+todaysdate[0];
     const [libelle, setLibelle] = useState('')
@@ -19,98 +20,16 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
     const [idCategorie, setIdCategorie] = useState(categories[0].id);
     const [libCat, setLibCat] = useState('')
     const [montant, setMontant] = useState('')
-    const [jourDuMois, setJourDuMois] = useState('')
-    const [nombreDeRepetition, setNombreDeRepetition] = useState('')
     const [checkbox, setCheckbox] = useState(false)
     const [alert, setAlert] = useState('')
     const [libelleMessage, setLibelleMessage] = useState('')
-    const [errorMessage, setErrorMessage] = useState('')
     const [dateOpsMessage, setDateOpsMessage] = useState('')
     const [montantMessage, setMontantMessage] = useState('')
-    const [jourDuMoisMessage, setJourDuMoisMessage] = useState('')
-    const [nombreDeRepetitionMessage, setNombreDeRepetitionMessage] = useState('')
     
     const data = new FormData()
     data.append('iduser', user)
     data.append('fonctionnalite', fonctionnalite)
-
-    const arrayCompare = (arrayA, arrayB) => {
-        for (let i = 0; i < arrayA.length; i++) {
-            if (arrayA[i] !== arrayB[i]) {
-                return false;
-            }
-        }
-    };
-
-    const checkLibelle = (libelle) => {
-        if (libelle.trim() === "") {
-            setLibelleMessage("Le libelle est obligatoire");
-            return true;
-        } else if (libelle.length < 2 || libelle.length > 100) {
-            setLibelleMessage("Veuillez taper un libelle valide svp");
-            return true;
-        } else {
-            setLibelleMessage("");
-            return false;
-        }
-    };  
-    
-    const checkDateOps = (dateOps) => {
-        if (!dateOps) {
-            setDateOpsMessage("La date est obligatoire");
-            return true;
-        } else {
-            setDateOpsMessage("");
-            return false;
-        }
-    };
-    
-    const checkMontant = (montant) => {
-        if (montant=="") {
-            setMontantMessage("Le montant est obligatoire");
-            return true;
-        } else if (montant <= 0) {
-            setMontantMessage("Le montant doit être supérieur à zéro");
-            return true;
-        } else {
-            setMontantMessage("");
-            return false;
-        }
-    };
-
-    const checkNombreDeRepetition = (value) => {
-        setNombreDeRepetition(value)
-        if(checkbox == true){ 
-            if (value == '' || value <=1 || value > 25 || isNaN(value)) {
-                setNombreDeRepetitionMessage('Veuillez saisir un nombre compris entre 2 et 25')
-                return false
-            } else {
-                setNombreDeRepetitionMessage('')
-                return true
-            }
-        } else {
-            setNombreDeRepetitionMessage('')
-            return true
-        }
-    }
-
-    //Fonction pour tester la zone jourDuMois
-    const checkJourDuMois = (value) => {
-        setJourDuMois(value)
-        if(checkbox == true){ 
-            if (value == '' || value <1 || value > 31 || isNaN(value)) {
-                setJourDuMoisMessage('Veuillez saisir un nombre compris entre 1 et 31')
-                return false
-            } else {
-                setJourDuMoisMessage('')
-                return true
-            }
-        } else {
-            setJourDuMoisMessage('')
-            return true
-        }
-    }
-    
+   
     useEffect(() => { 
         if (showSaisieForm.operationType=='editOperation' || showSaisieForm.operationType=='deletePrevision' || showSaisieForm.operationType=='confirmPrevision') {
             setIdCategorie(showSaisieForm.operationItem.idcategorie)
@@ -120,45 +39,6 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
             setMontant(showSaisieForm.operationItem.montant)
         }
     }, [])
-
-    
-    //Fonction pour transformer une prévision en une opération effectuée
-    const handleTransformPrevision = () => {
-        const checkLibelle1 = checkLibelle(libelle)
-        const checkDateOps1 = checkDateOps(dateOps)
-        const checkMontant1 = checkMontant(montant)
-
-        const checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1]
-
-        if ( arrayCompare(checkResultArray, [false, false, false]) !== false) {
-            
-            data.append('function', 'transformPrevision')
-            data.append('idoperation', showSaisieForm.operationItem.id)
-            data.append('libelle', libelle)
-            data.append('dateops', dateOps)
-            data.append('idtypeops', idTypeOps)
-            data.append('idcategorie', idCategorie)
-            data.append('montant', montant)
-            //for (let [key, value] of data.entries()){console.log(key, value);}
-            axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
-            .then(res => {
-                if(res.data.status == 400){ 
-                    setAlert('Prévision transformée avec succès')
-                    //On supprime la prévision dans le store
-                    setTimeout(()=> {
-                        toggleSaisieForm(false, 'deleteItemFromStore', showSaisieForm.operationItem)
-                    }, 2000)             
-                }
-            })
-            .catch(err => {
-                setAlert("L'opération a echoué ")
-                // setTimeout(()=> {
-                //     setAlert("")
-                // }, 3000) 
-            })
-            
-        }
-    }
 
     //Fonction pour supprimer une opération de la bdd
     const handleDelete = () => {
@@ -179,40 +59,30 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
         .catch(err => setAlert("L'opération a echoué "+ err))
     }
     
-    //Fonction pour créer ou modifier une opération dans la bdd
+    //Fonction pour créer, confirmer ou modifier une opération dans la bdd
     const handleSubmit = (e) => {
         e.preventDefault()
         const checkLibelle1 = checkLibelle(libelle)
+        setLibelleMessage(checkLibelle1.message)
         const checkDateOps1 = checkDateOps(dateOps)
+        setDateOpsMessage(checkDateOps1.message)
         const checkMontant1 = checkMontant(montant)
-        const checkJourDuMois1 = checkJourDuMois(jourDuMois)
-        const checkNombreDeRepetition1 = checkNombreDeRepetition(nombreDeRepetition)
-        
-        //const checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, checkJourDuMois1, checkNombreDeRepetition1]
+        setMontantMessage(checkMontant1.message)
+
         let checkResultArray = []
-        if(checkbox) {
-            checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, checkJourDuMois1, checkNombreDeRepetition1]
-        } else {
-            checkResultArray=[checkLibelle1, checkDateOps1, checkMontant1, false, false]
-        }
-        
-        if ( arrayCompare(checkResultArray, [false, false, false, false, false]) !== false) {
-            showSaisieForm.operationType=='editOperation'? data.append('idoperation', showSaisieForm.operationItem.id):null
+        checkResultArray=[checkLibelle1.value, checkDateOps1.value, checkMontant1.value]
+        if ( arrayCompare(checkResultArray, [false, false, false]) !== false) {
+            showSaisieForm.operationType == 'newOperation' && data.append('function', 'insertOperation')
+            showSaisieForm.operationType == 'editOperation' && data.append('function', 'editOperation')
+            showSaisieForm.operationType == 'confirmPrevision' && data.append('function', 'transformPrevision')
+            showSaisieForm.operationType!='newOperation' && data.append('idoperation', showSaisieForm.operationItem.id)
             data.append('libelle', libelle)
             data.append('montant', montant)
             data.append('dateops', dateOps)
             data.append('idtypeops', idTypeOps)
             data.append('idcategorie', idCategorie)
-            data.append('jourDuMois', jourDuMois)
-            data.append('nombreDeRepetition', nombreDeRepetition)
-            showSaisieForm.operationType == 'newOperation' && !checkbox && data.append('function', 'insertOperation')
-            showSaisieForm.operationType == 'newOperation' &&checkbox && data.append('function', 'insertRecursivOperation')
-            showSaisieForm.operationType == 'editOperation' && data.append('function', 'editOperation')
-            
-            //for (let [key, value] of data.entries()){console.log(key, value);}
             axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
             .then(res => {
-                //console.log(res);
                 if(res.data=='') {
                     setAlert("Echec : l'opération n'a pas réussi")
                 } else {
@@ -222,17 +92,24 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                     if(res.data.status == 201){ 
                         //c'est une création, on ajoute l'élément dans le store du parent
                         setAlert('Opération enregistrée avec succès')
+                        
+                        toggleSaisieForm(true, 'addItemToStore', {
+                            id: res.data.id,
+                            categorie: selectedOption.innerText,
+                            libelle: libelle,
+                            montant: montant,
+                            dateops: dateOps,
+                            idtypeops: idTypeOps,
+                            idcategorie: idCategorie,
+                            isconfirmed: 0
+                        })
+                        if(!checkbox){
+                            setLibelle('')
+                            setMontant('')
+                        } else {
+                            setDateOps('')
+                        }
                         setTimeout(()=> {
-                            toggleSaisieForm(false, 'addItemToStore', {
-                                id: res.data.id,
-                                categorie: selectedOption.innerText,
-                                libelle: libelle,
-                                montant: montant,
-                                dateops: dateOps,
-                                idtypeops: idTypeOps,
-                                idcategorie: idCategorie,
-                                isconfirmed: 0
-                            })
                             setAlert('')
                         }, 2000)  
                     }    
@@ -252,7 +129,16 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                                 montant:montant
                             }) 
                         }, 2000)                
-                    }   
+                    } 
+                    
+                    if(res.data.status == 400){ 
+                        //c'est une transformation
+                        //On supprime la prévision dans le store
+                    setAlert('Prévision transformée avec succès')
+                    setTimeout(()=> {
+                        toggleSaisieForm(false, 'deleteItemFromStore', showSaisieForm.operationItem)
+                    }, 2000)             
+                }
                 }
             })
             .catch(err => setAlert("L'opération a echoué "+ err))
@@ -356,7 +242,7 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                             {dateOpsMessage && <span className='text-danger'>{dateOpsMessage}</span>}
 
                             {/* Coût de l'opération */}
-                            <div className='montant'>
+                            <div id='montant' className='montant'>
                                 <label htmlFor="montant" className='text-light'>Montant : </label> 
                                 <input
                                     type='text'
@@ -387,18 +273,16 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                                 </div>
                             }
 
-                            <div className='d-flex justify-content-center gap-2 my-2'>
-    
-                                    {showSaisieForm.operationType=='confirmPrevision' && <button onClick={()=>{handleTransformPrevision()}} className='btn btn-primary'>Enregistrer</button>}
-                                    {showSaisieForm.operationType=='newOperation' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
-                                    {showSaisieForm.operationType=='deletePrevision' && <button onClick={()=>{handleDelete()}} className='btn btn-danger'>Oui</button>}
-                                    {showSaisieForm.operationType=='editOperation' && <button onClick={()=>{handleSubmit()}} className='btn btn-primary'>Modifier</button>}
-
+                            <div id='boutons' className='d-flex justify-content-center gap-2 my-2'>
+                                {showSaisieForm.operationType=='confirmPrevision' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
+                                {showSaisieForm.operationType=='newOperation' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
+                                {showSaisieForm.operationType=='editOperation' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Modifier</button>}
+                                {showSaisieForm.operationType=='deletePrevision' && <button onClick={()=>{handleDelete()}} className='btn btn-danger'>Oui</button>}
                                 <button 
                                     type="button" 
                                     className="close bg-danger border border-secondary px-3 text-light rounded" 
                                     onClick={()=> toggleSaisieForm(false, '', '')}>
-                                        <span aria-hidden="true">Annuler</span>
+                                        <span aria-hidden="true">Fermer</span>
                                 </button>
                             </div>
                         </form>

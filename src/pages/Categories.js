@@ -3,26 +3,22 @@ import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 //import { useForm } from "react-hook-form"; //Cette librairie permet de gérer les formulaires avec react
 import { loadCategories, showCategoriesForm, selectLoadCategories, selectShowCategoriesForm } from '../features/categoriesReducer';
-import SaisieCategories from '../components/categories/SaisieCategories';
+import CategorieForm from '../components/categories/CategorieForm';
+import PencilIcon from '../images/pencil.svg';
 
 const Categories = () => {
-    const dispatch = useDispatch();
+    //const dispatch = useDispatch();
     const user = localStorage.getItem('userId')
-    const [categories, setCategories] = useState([])
+    const categories = JSON.parse(localStorage.getItem('categories')) 
+    const operationsType = JSON.parse(localStorage.getItem('typeOperations')); //Liste des opérations
+    const [selectedOperation, setSelectedOperation] = useState('D')
+    const [showModal, setShowModal] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     //let loadCategoriesTrue = useSelector(selectLoadCategories)
-    const operations = JSON.parse(localStorage.getItem('operations')) 
-    const saisieCategories = useSelector(selectShowCategoriesForm)
+    //const saisieCategories = useSelector(selectShowCategoriesForm)
 
-    //Récupération de la liste des categories
-    /*
-    useEffect(() => { 
-        if (loadCategoriesTrue) {
-            setCategories(JSON.parse(localStorage.getItem('categories'))) 
-            dispatch(loadCategories(false));
-        }
-    }, [loadCategoriesTrue])
-    */
+    const handleOpen = () => setShowModal(true);
+    const handleClose = () => setShowModal(false)
     const handleEditCategorie = (id) => {
 
     }
@@ -37,48 +33,52 @@ const Categories = () => {
             <div className="d-flex justify-content-between ps-2">
                 <h4 className='text-center my-2'>LISTE DES CATEGORIES</h4>
             </div>
-            { saisieCategories && <SaisieCategories/> }
+            <CategorieForm show={showModal} onClose={handleClose}/>
 
             {/* Choix opération */}
-            <form className="w-100 d-flex justify-content-between col-12 col-md-10 col-lg-8 mx-auto rounded-2 bg-success text-light p-2">
-                <div className='d-flex text-white mb-3'>
-                    <p className='mb-0'>Types d'opérations :</p>
-
-                    {operations.map((operation) => (
-                        <label htmlFor={operation.id} key={operation.id} className='form-check-label'>
-                            <input 
-                                type="radio" 
-                                value={operation.id} 
-                                id={operation.id} 
-                                className='form-check-input ms-3' 
-                                name = 'selectedOperation' 
-                                defaultChecked = {(operation.id == 'R') && 'checked'}
-                            />
-                            {operation.libelle}
-                        </label> 
-                    )) }  
+            <form className='d-flex col-12 col-md-10 col-lg-8 bg-success text-light p-1 '>
+                <div className="col-10">
+                    <p className='col mb-0'>Types d'opérations :</p>
+                    <div className="d-flex gap-5">
+                        {operationsType.map((typeOps) => (
+                            <label htmlFor={typeOps.id} key={typeOps.id} className='form-check-label'>
+                                <input 
+                                    type="radio" 
+                                    id={typeOps.id} 
+                                    name='selectedtypeOperation'
+                                    value={typeOps.id} 
+                                    className='form-check-input' 
+                                    defaultChecked = {(typeOps.id == 'D') && 'checked'}
+                                    onChange={(e)=> setSelectedOperation(e.target.value)}
+                                />
+                                {typeOps.libelle}
+                            </label> 
+                        ))}  
+                    </div>
                 </div>
-                <button 
-                    onClick={() => dispatch(showCategoriesForm())} 
-                    className=' btn btn-primary '
-                >
-                    Ajouter une categorie
-                </button>
+                <div className="btn btn-primary m-0 fs-1 py-0 px-3" onClick={handleOpen}>+</div>
+ 
             </form>
 
+
             {/* LISTE DES CATEGORIES */}
-            <ul className='bg-success bg-opacity-25 col-12 col-md-10 col-lg-8 mx-auto'>                
-                {/*categories
+            <table className='table table-striped table-bordered col-12 col-md-10 col-lg-8 mx-auto'>   
+                <tbody>         
+                {categories
                 .filter((categorie) => categorie.typeOps.includes(selectedOperation))
                 .map((categorie, index) => (
-                    <li key={index}  className='row no-gutters border-bottom'>
-                        <div className='col-1'>{index+1}</div>
-                        <div className='col-7'>{categorie.libelle}</div>
-                        <button onClick={handleEditCategorie(categorie.id)} className='col-2 btn btn-primary '>Modifier</button>
-                        <button onClick={handleDeleteCategorie(categorie.id)} className='col-2 btn btn-danger '>Supprimer</button>
-                    </li>
-                )) */ }   
-            </ul>
+                    <tr key={index}  className=''>
+                        <td className='col-1'>{index+1}</td>
+                        <td className='col-5'>{categorie.libelle}</td>
+                        <td><button onClick={handleEditCategorie(categorie.id)} className='col-3 btn btn-primary'>
+                                <i className="fa-solid fa-pencil text-light"></i>
+                            </button>
+                        </td>
+                        <td><button onClick={handleDeleteCategorie(categorie.id)} className='col-2 btn btn-danger '>Supprimer</button></td>
+                    </tr>
+                )) }   
+                </tbody>    
+            </table>
         </div>
     );
 };
