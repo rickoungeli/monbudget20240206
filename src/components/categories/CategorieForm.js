@@ -8,10 +8,11 @@ import { useForm } from "react-hook-form";
 import { AiFillExclamationCircle } from 'react-icons/ai';
 
 
-const CategorieForm = ({ show, onClose }) => {
+const CategorieForm = ({ show, onClose, rafreshList }) => {
     if (!show) return null; //si show est false, ne rien afficher
     //const dispatch = useDispatch();
     const user = localStorage.getItem('userId')
+    let categories = JSON.parse(localStorage.getItem('categories')) 
     const operationsType = JSON.parse(localStorage.getItem('typeOperations')); //Liste des opérations
     const [selectedOperation, setSelectedOperation] = useState('D')
     const [libelle, setLibelle] = useState('')
@@ -32,18 +33,25 @@ const CategorieForm = ({ show, onClose }) => {
             if(res.data=='') {
                setAlert("Echec : l'opération n'a pas réussi")
             } else {
-                if(res.data==='Categorie enregistrée !' || res.data==='La modification est enregistrée avec succèss'){
-                    setAlert(res.data)
-                    //dispatch(loadCategories(true))
+                if(res.data.status==201){
+                    setAlert("Votre saisie est entregistrée avec succès")
+                    categories = [...categories, {
+                        id: res.data.id,
+                        libelle: libelle,
+                        userId: user,
+                        typeOps: selectedOperation
+                    }] 
+                    setLibelle('');
+                    localStorage.setItem('categories', JSON.stringify(categories));
+                    rafreshList(categories);
                 }
-                setAlert(res.data)
+                
             }
         })
-        .catch(err => setAlert("L'opération a echoué "+ err)) 
-        console.log({
-         'libelle :' : libelle,
-         'idTypeOps :' : selectedOperation
-        })   
+        .catch(err => {
+            setAlert("L'opération a echoué "+ err)
+            //console.log(err) 
+        })  
         
             
     }
@@ -56,7 +64,7 @@ const CategorieForm = ({ show, onClose }) => {
                         <h5 className="modal-title">Saisie d'une categorie</h5>
                     </div>
                     <div className="modal-body bg-dark ">
-                        {alert && <p className='alert alert-danger p-1'>{alert}</p> }
+                        {alert && <p className={alert[0]=='V'?'alert alert-success p-1 text-center': 'alert alert-danger p-1 text-center'}>{alert}</p> }
                         <form onSubmit={(e) => handleSubmit(e)} className="row no-gutters m-3 px-2 py-1 mb-0 scroller">
                             {/* Choix opération */}
                             <div className='groupe-type-operation text-white mb-3'>
@@ -86,6 +94,7 @@ const CategorieForm = ({ show, onClose }) => {
                                     type="text" 
                                     id='libelle'
                                     name = 'libelle' 
+                                    value={libelle}
                                     onChange={(e)=> setLibelle(e.target.value)}
                                     className={errorMessage? "form-control border border-2 border-danger" : "form-control"}/>
                             </div>
@@ -105,8 +114,8 @@ const CategorieForm = ({ show, onClose }) => {
                         </form>
                     </div>
                     <div className="modal-footer">
-                        <button type="button" class="btn btn-secondary" onClick={onClose}>Annuler</button>
-                        <button type="button" class="btn btn-primary" onClick={handleSubmit}>Save changes</button>
+                        <button type="button" className="btn btn-danger" onClick={onClose}>Annuler</button>
+                        <button type="button" className="btn btn-primary" onClick={handleSubmit}>Save changes</button>
                     </div>
                 </div>
             </div>

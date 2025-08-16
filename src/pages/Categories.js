@@ -9,7 +9,7 @@ import PencilIcon from '../images/pencil.svg';
 const Categories = () => {
     //const dispatch = useDispatch();
     const user = localStorage.getItem('userId')
-    const categories = JSON.parse(localStorage.getItem('categories')) 
+    const [categories, setCategories] = useState(JSON.parse(localStorage.getItem('categories')) )
     const operationsType = JSON.parse(localStorage.getItem('typeOperations')); //Liste des opérations
     const [selectedOperation, setSelectedOperation] = useState('D')
     const [showModal, setShowModal] = useState(false)
@@ -18,7 +18,10 @@ const Categories = () => {
     //const saisieCategories = useSelector(selectShowCategoriesForm)
 
     const handleOpen = () => setShowModal(true);
-    const handleClose = () => setShowModal(false)
+    const handleClose = () => setShowModal(false);
+    const rafreshList = (datas) => {
+        setCategories(datas);
+    }
     const handleEditCategorie = (id) => {
 
     }
@@ -33,7 +36,7 @@ const Categories = () => {
             <div className="d-flex justify-content-between ps-2">
                 <h4 className='text-center my-2'>LISTE DES CATEGORIES</h4>
             </div>
-            <CategorieForm show={showModal} onClose={handleClose}/>
+            <CategorieForm show={showModal} onClose={handleClose} rafreshList={rafreshList}/>
 
             {/* Choix opération */}
             <form className='d-flex col-12 col-md-10 col-lg-8 bg-success text-light p-1 '>
