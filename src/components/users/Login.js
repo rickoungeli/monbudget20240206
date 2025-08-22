@@ -24,7 +24,7 @@ const Login = () => {
     const getCategories = (userId) => {
         axios.get(`${process.env.REACT_APP_API_URL}categories.php?function=getCategories&userId=${userId}`)
         .then(res => {
-            if(res.data=='') {
+            if(res.data.length == 0) {
             setAlert("Vous devez enregistrer les categories d'opérations")
             setTimeout(()=>{
                 localStorage.setItem('page','categories')
@@ -54,7 +54,6 @@ const Login = () => {
     //Fonction pour récupérer et mettre en store la liste des mois
     const getMonths = () => {
         axios.get(`${process.env.REACT_APP_API_URL}operations.php?function=getMonths`)
-        //axios.get(`http://rickou.fr/dao/operations.php?function=getMonths`)
         .then (res => {
             localStorage.setItem('fmonth', JSON.stringify(res.data))
         })
@@ -63,12 +62,11 @@ const Login = () => {
         })
     }
 
+    //Fonction pour connecter un utilisateur
     const handleSubmit = (e) => {
         e.preventDefault()
         axios.get(`${process.env.REACT_APP_API_URL}user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
-        //axios.get(`https://rickou.fr/dao/user.php?function=loginUser&pseudo=${pseudo}&password=${password}`)
         .then(res => {
-            console.log(res);
             if(res.data){
             
                 if(res.status == 500) {

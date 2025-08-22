@@ -18,6 +18,8 @@ const Home = () => {
                         <Link to = '/depenses' className="btn btn-primary">GERER LES DEPENSES</Link>
 
                         <Link to = '/categories' className="btn btn-primary">GERER LES CATEGORIES</Link>
+
+                        <Link to = '/users' className="btn btn-primary">GERER LES UTILISATEURS</Link>
                     </div>
 
                     </>

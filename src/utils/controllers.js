@@ -92,30 +92,30 @@ export const arrayCompare = (arrayA, arrayB) => {
 
 
 export const checkLibelle = (libelle) => {
-    if (libelle.trim() === "") {
-        return {value:true, message: "Le libelle est obligatoire"};
+    if (!libelle.trim()) {
+        return "Ce champ est obligatoire";
     } else if (libelle.length < 2 || libelle.length > 100) {
-        return {value:true, message: "Veuillez taper un libelle valide svp"};
+        return "Votre saisie n'est pas valide";
     } else {
-        return {value:false, message: ''};
+        return '';
     }
 };  
 
 export const checkDateOps = (dateOps) => {
     if (!dateOps) {
-        return {value:true, message: "La date est obligatoire"};
+        return "La date est obligatoire";
     } else {
-        return {value:false, message: ''};
+        return '';
     }
 };
 
 export const checkMontant = (montant) => {
     if (montant=="") {
-        return {value:true, message: "Le montant est obligatoire"};
+        return "Le montant est obligatoire";
     } else if (montant <= 0) {
-        return {value:true, message: "Le montant doit être supérieur à zéro"};
+        return "Le montant doit être supérieur à zéro";
     } else {
-        return {value:false, message: ''};
+        return '';
     }
 };
 

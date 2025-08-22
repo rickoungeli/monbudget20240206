@@ -1,42 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-//import { useForm } from "react-hook-form"; //Cette librairie permet de gérer les formulaires avec react
-import { loadCategories, showCategoriesForm, selectLoadCategories, selectShowCategoriesForm } from '../features/categoriesReducer';
 import CategorieForm from '../components/categories/CategorieForm';
 import PencilIcon from '../images/pencil.svg';
 
 const Categories = () => {
-    //const dispatch = useDispatch();
     const user = localStorage.getItem('userId')
-    const [categories, setCategories] = useState(JSON.parse(localStorage.getItem('categories')) )
+    const [categories, setCategories] = useState(JSON.parse(localStorage.getItem('categories')) );
     const operationsType = JSON.parse(localStorage.getItem('typeOperations')); //Liste des opérations
+    const [selectedCategory, setSelectedCategory] = useState(null)
     const [selectedOperation, setSelectedOperation] = useState('D')
+    const [fonctionnality, setFonctionnality] = useState('')
     const [showModal, setShowModal] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
-    //let loadCategoriesTrue = useSelector(selectLoadCategories)
-    //const saisieCategories = useSelector(selectShowCategoriesForm)
 
     const handleOpen = () => setShowModal(true);
     const handleClose = () => setShowModal(false);
     const rafreshList = (datas) => {
-        setCategories(datas);
+        setShowModal(false);
+        
+        
+        if(fonctionnality == 'deleteCategorie') {
+            //On supprime ce produit dans le state
+            setCategories(categories.filter((cat) => cat.id !== datas.id));
+            localStorage.setItem('categories', JSON.stringify(categories))
+        }
+        //setCategories(datas);
     }
-    const handleEditCategorie = (id) => {
 
+    //Fonction pour ouvrir la modale de création
+    const handleCreateCategory = ({}) => {
+        setSelectedCategory(null)
+        setFonctionnality('createCategorie')
+        setShowModal(true);        
     }
 
-    const handleDeleteCategorie = (id) => {
-
+    //Fonction pour ouvrir la modale de modification
+    const handleEditCategory = (category) => {
+        setSelectedCategory(category)
+        setFonctionnality('editCategorie')
+        setShowModal(true);        
     }
+
+    const handleDeleteCategory = (category) => {
+        setSelectedCategory(category)
+        setFonctionnality('deleteCategorie')
+        setShowModal(true); 
+    }
+
+    
     
     return (
         <div>
-            
+             
             <div className="d-flex justify-content-between ps-2">
                 <h4 className='text-center my-2'>LISTE DES CATEGORIES</h4>
             </div>
-            <CategorieForm show={showModal} onClose={handleClose} rafreshList={rafreshList}/>
+            {/*<CategorieForm show={showModal} onClose={handleClose} rafreshList={rafreshList}/>*/}
+
+            <CategorieForm 
+                category={selectedCategory} 
+                fonctionnality = {fonctionnality}
+                onClose = {handleClose}
+                rafreshList={rafreshList}
+                show = {showModal}
+            />
 
             {/* Choix opération */}
             <form className='d-flex col-12 col-md-10 col-lg-8 bg-success text-light p-1 '>
@@ -59,7 +86,7 @@ const Categories = () => {
                         ))}  
                     </div>
                 </div>
-                <div className="btn btn-primary m-0 fs-1 py-0 px-3" onClick={handleOpen}>+</div>
+                <div className="btn btn-primary m-0 fs-1 py-0 px-3" onClick={handleCreateCategory}>+</div>
  
             </form>
 
@@ -68,20 +95,22 @@ const Categories = () => {
             <table className='table table-striped table-bordered col-12 col-md-10 col-lg-8 mx-auto'>   
                 <tbody>         
                 {categories
-                .filter((categorie) => categorie.typeOps.includes(selectedOperation))
-                .map((categorie, index) => (
+                .filter((cat) => cat.typeOps.includes(selectedOperation))
+                .map((cat, index) => (
                     <tr key={index}  className=''>
                         <td className='col-1'>{index+1}</td>
-                        <td className='col-5'>{categorie.libelle}</td>
-                        <td><button onClick={handleEditCategorie(categorie.id)} className='col-3 btn btn-primary'>
+                        <td className='col-5'>{cat.libelle}</td>
+                        <td><button onClick={() => handleEditCategory(cat)} className='col-3 btn btn-primary'>
                                 <i className="fa-solid fa-pencil text-light"></i>
                             </button>
                         </td>
-                        <td><button onClick={handleDeleteCategorie(categorie.id)} className='col-2 btn btn-danger '>Supprimer</button></td>
+                        <td><button onClick={() => handleDeleteCategory(cat)} className='col-2 btn btn-danger '>Supprimer</button></td>
                     </tr>
                 )) }   
                 </tbody>    
             </table>
+
+
         </div>
     );
 };

@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Login from './components/users/Login';
 import Register from './components/users/Register';
 import Categories from './pages/Categories';
+import Users from './pages/Users';
 import NotFound from './pages/NotFound';
 import DatesAndOperationsForm from './pages/DatesAndOperationsForm';
 
@@ -17,6 +18,7 @@ const App = () => {
         <Route path="/previsions" element={<DatesAndOperationsForm fonctionnalite='previsions' />} />
         <Route path="/depenses" element={<DatesAndOperationsForm fonctionnalite='depenses' />} />
         <Route path="/categories" element={<Categories />} />
+        <Route path="/users" element={<Users />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
