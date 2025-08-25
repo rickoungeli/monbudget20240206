@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
-import { useForm } from "react-hook-form";
 import { checkLibelle } from '../../utils/controllers';
 //Import from react-icons
 import { AiFillExclamationCircle } from 'react-icons/ai';
@@ -15,13 +14,6 @@ const CategorieForm = ({ category, fonctionnality, show, onClose, rafreshList })
     const [libelle, setLibelle] = useState(fonctionnality=='createCategorie'? '' : category.libelle)
     const [alert, setAlert] = useState('');
     const [errors, setErrors] = useState({});
-    
-
-    const data = new FormData()
-    fonctionnality == 'createCategorie' && data.append('function', 'insertCategorie')
-    fonctionnality == 'editCategorie' && data.append('function', 'updateCategorie')
-    fonctionnality == 'deleteCategorie' && data.append('function', 'deleteCategorie')
-    fonctionnality != 'createCategorie' && data.append('idcategorie', category.id)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -40,26 +32,25 @@ const CategorieForm = ({ category, fonctionnality, show, onClose, rafreshList })
         }
 
         //Si valide, on envoie les données
-        data.append('userId', user) 
+        const data = new FormData()
+        data.append('userid', user) 
         data.append('libelle', libelle)
-        data.append('idtypeOps', selectedOperation)
+        data.append('idtypeops', selectedOperation)
+        fonctionnality == 'createCategorie' && data.append('function', 'insertCategorie')
+        fonctionnality == 'editCategorie' && data.append('function', 'updateCategorie')
+        fonctionnality == 'deleteCategorie' && data.append('function', 'deleteCategorie')
+        fonctionnality != 'createCategorie' && data.append('idcategorie', category.id)
+        //console.log(Object.fromEntries(data.entries()));
         try {
             const res = await axios.post(`${process.env.REACT_APP_API_URL}categories.php`, data)
-            console.log(res.data);
             if(res.data=='') {
                setAlert("Echec : l'opération n'a pas réussi")
             } else {
                 if(fonctionnality == 'createCategorie'){
                     setAlert("Votre saisie est entregistrée avec succès")
-                    categories = [...categories, {
-                        id: res.data.id,
-                        libelle: libelle,
-                        userId: user,
-                        typeOps: selectedOperation
-                    }] 
+                    data.append('id', res.data.id)
                     setLibelle('');
-                    localStorage.setItem('categories', JSON.stringify(categories));
-                    rafreshList(categories);
+                    rafreshList(Object.fromEntries(data.entries())); //Convertit formData en objet
                 }
 
                 if(fonctionnality == 'editCategorie'){ 
@@ -68,7 +59,7 @@ const CategorieForm = ({ category, fonctionnality, show, onClose, rafreshList })
                     setAlert('Opération modifiée avec succès')
                     setTimeout(()=> {
                         setAlert('');
-                        rafreshList(categories);
+                        rafreshList(Object.fromEntries(data.entries())); //Convertit formData en objet
                     }, 2000)   
                 }
 

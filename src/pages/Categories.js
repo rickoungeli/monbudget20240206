@@ -12,19 +12,31 @@ const Categories = () => {
     const [fonctionnality, setFonctionnality] = useState('')
     const [showModal, setShowModal] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
-
-    const handleOpen = () => setShowModal(true);
     const handleClose = () => setShowModal(false);
+
+    //Fonction pour mettre le state à jour et raffraichir l'écran
     const rafreshList = (datas) => {
-        setShowModal(false);
         
+        if(fonctionnality == 'createCategorie') {
+            setCategories((prevCat) => [...prevCat, datas])
+
+        }
         
+        if(fonctionnality == 'editCategorie') {
+            //On modifie l'item dans le store du parent
+            setCategories((prevCategories) => 
+                prevCategories.map((c) => 
+                    c.id === datas.idcategorie ? { ...c, ...datas} : c )
+        ) 
+    }
+    
         if(fonctionnality == 'deleteCategorie') {
             //On supprime ce produit dans le state
             setCategories(categories.filter((cat) => cat.id !== datas.id));
-            localStorage.setItem('categories', JSON.stringify(categories))
         }
-        //setCategories(datas);
+        
+        localStorage.setItem('categories', JSON.stringify(categories));
+        setShowModal(false);
     }
 
     //Fonction pour ouvrir la modale de création
@@ -41,6 +53,7 @@ const Categories = () => {
         setShowModal(true);        
     }
 
+    //Fonction pour ouvrir la modale de suppression
     const handleDeleteCategory = (category) => {
         setSelectedCategory(category)
         setFonctionnality('deleteCategorie')

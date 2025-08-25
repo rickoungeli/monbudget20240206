@@ -1,63 +1,32 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { AiFillExclamationCircle } from 'react-icons/ai';
-import { arrayCompare } from '../../utils/controllers';
 import { checkLibelle } from '../../utils/controllers';
 import { checkDateOps } from '../../utils/controllers';
 import { checkMontant } from '../../utils/controllers';
 
 
-const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
+const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
+    if (!show) return null; //si show est false, ne rien afficher
+
     const user = localStorage.getItem('userId')
+    const page = localStorage.getItem('page')
     const operations = JSON.parse(localStorage.getItem('typeOperations'));
     const categories = JSON.parse(localStorage.getItem('categories'));
-
     const todaysdate = (new Date().toLocaleDateString()).split('/');
     const todays = todaysdate[2]+'-'+todaysdate[1]+'-'+todaysdate[0];
-    const [libelle, setLibelle] = useState('')
-    const [dateOps, setDateOps] = useState(todays)
-    const [idTypeOps, setIdTypeOps] = useState('D');
-    const [idCategorie, setIdCategorie] = useState(categories[0].id);
+    const [libelle, setLibelle] = useState(action=='create'? '' : ops.libelle)
+    const [dateOps, setDateOps] = useState(action=='create'? todays : ops.dateops)
+    const [idTypeOps, setIdTypeOps] = useState(action=='create'? 'D' : ops.idtypeops);
+    const [idCategorie, setIdCategorie] = useState(action=='create'? categories[0].id : ops.idcategorie);
     const [libCat, setLibCat] = useState('')
-    const [montant, setMontant] = useState('')
+    const [montant, setMontant] = useState(action=='create'? '' : ops.montant)
     const [checkbox, setCheckbox] = useState(false)
     const [alert, setAlert] = useState('')
     const [errors, setErrors] = useState({});
     
-    const data = new FormData()
-    data.append('iduser', user)
-    data.append('fonctionnalite', fonctionnalite)
-   
-    useEffect(() => { 
-        if (showSaisieForm.operationType=='editOperation' || showSaisieForm.operationType=='deletePrevision' || showSaisieForm.operationType=='confirmPrevision') {
-            setIdCategorie(showSaisieForm.operationItem.idcategorie)
-            setIdTypeOps(showSaisieForm.operationItem.idtypeops)
-            setLibelle(showSaisieForm.operationItem.libelle)
-            setDateOps(showSaisieForm.operationItem.dateops)
-            setMontant(showSaisieForm.operationItem.montant)
-        }
-    }, [])
-
-    //Fonction pour supprimer une opération de la bdd
-    const handleDelete = () => {
-        const operationId = showSaisieForm.operationItem.id
-        data.append('function', 'deletePrevision')
-        data.append('idoperation', operationId)
-        axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
-        .then(res => {
-            if(res.data.status == 300){ 
-                setAlert('Opération supprimée avec succès')
-               //On ferme le formulaire et on supprime l'item dans le store du parent
-               setTimeout(()=> {
-                    toggleSaisieForm(false, 'deleteItemFromStore', showSaisieForm.operationItem)
-                }, 2000)     
-           }
-                
-        })
-        .catch(err => setAlert("L'opération a echoué "+ err))
-    }
-    
-    //Fonction pour créer, confirmer ou modifier une opération dans la bdd
+ 
+    //Fonction pour créer, confirmer, modifier ou supprimer une opération dans la bdd
     const handleSubmit = (e) => {
         e.preventDefault()
         setErrors({});
@@ -77,17 +46,28 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
         }
 
         //Si valide, on envoie les données
-        showSaisieForm.operationType == 'newOperation' && data.append('function', 'insertOperation')
-        showSaisieForm.operationType == 'editOperation' && data.append('function', 'editOperation')
-        showSaisieForm.operationType == 'confirmPrevision' && data.append('function', 'transformPrevision')
-        showSaisieForm.operationType!='newOperation' && data.append('idoperation', showSaisieForm.operationItem.id)
+        const data = new FormData()
+        data.append('iduser', user)
         data.append('libelle', libelle)
         data.append('montant', montant)
         data.append('dateops', dateOps) 
         data.append('idtypeops', idTypeOps)
         data.append('idcategorie', idCategorie)
+
+        if (action == 'create') {
+            page == 'operations' && data.append('function', 'insertOperation')
+            page == 'previsions' && data.append('function', 'insertPrevision')
+        } else {
+            action == 'edit' && data.append('function', 'editOperation')
+            action == 'delete' && data.append('function', 'deletePrevision')
+            action == 'confirm' && data.append('function', 'transformPrevision')
+            data.append('idops', ops.id)
+        }
+
         axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
         .then(res => {
+            console.log(res.data);
+
             if(res.data=='') {                          
                 setAlert("Echec : l'opération n'a pas réussi")
             } else {
@@ -97,17 +77,12 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                 if(res.data.status == 201){ 
                     //c'est une création, on ajoute l'élément dans le store du parent
                     setAlert('Opération enregistrée avec succès')
+                    data.append('id', res.data.id,)
+                    data.append('checkbox', checkbox)
+                    page == 'previsions' && data.append('isconfirmed', 0)
+                    page == 'operations' && data.append('isconfirmed', 1)
+                    rafreshList(Object.fromEntries(data.entries())); //Convertit formData en objet
                     
-                    toggleSaisieForm(true, 'addItemToStore', {
-                        id: res.data.id,
-                        categorie: selectedOption.innerText,
-                        libelle: libelle,
-                        montant: montant,
-                        dateops: dateOps,
-                        idtypeops: idTypeOps,
-                        idcategorie: idCategorie,
-                        isconfirmed: 0
-                    })
                     if(!checkbox){
                         setLibelle('')
                         setMontant('')
@@ -124,17 +99,20 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                     //On ferme le formulaire et on modifie l'item dans le store du parent
                     setAlert('Opération modifiée avec succès')
                     setTimeout(()=> {
-                        toggleSaisieForm(false, 'editItemFromStore', {
-                            id:showSaisieForm.operationItem.id,
-                            categorie: selectedOption.innerText,
-                            libelle:libelle,
-                            dateops:dateOps,
-                            idcategorie:idCategorie,
-                            idtypeops:idTypeOps,
-                            montant:montant
-                        }) 
+                        setAlert('');
+                        rafreshList(Object.fromEntries(data.entries())); //Convertit formData en objet
                     }, 2000)                
-                } 
+                }  
+
+                if(res.data.status == 300){ 
+                    //c'est une suppression
+                    //On ferme le formulaire et on supprimme l'item dans le state du parent
+                    setAlert('Suppression effectuée avec succès')
+                    setTimeout(()=> {
+                        setAlert('');
+                        rafreshList({'id':ops.id});
+                    }, 2000)   
+                }
                 
                 if(res.data.status == 400){ 
                     //c'est une transformation
@@ -153,28 +131,26 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
     }
 
     return (
-        <div className="saisie-form overlay">
+        <div className="saisie-form overlay m-1">
             <div className="modal-dialog bg-dark w-100 mx-auto">
                 <div className="modal-content">
                     <div className="modal-header bg-light p-1">
                         <div>
                             <h5 className="modal-title text-center text-dark">
-                                {showSaisieForm.operationType == 'newOperation' && fonctionnalite=='previsions'&& "Saisie d'une prévision"} 
-                                {showSaisieForm.operationType == 'newOperation' && fonctionnalite=='depenses' && "Saisie d'une opération effectuée"} 
-                                {showSaisieForm.operationType == 'editOperation' && fonctionnalite=='previsions' && "Modification d'une prévision" }
-                                {showSaisieForm.operationType == 'editOperation' && fonctionnalite=='depenses' && "Modification d'une opération" }
-                                {showSaisieForm.operationType == 'deletePrevision' && "Voulez-vous supprimer cette prévision ?"}
-                                {showSaisieForm.operationType == 'confirmPrevision' && "Cette prévision a été réalisée ?" }
-                                
+                                {action == 'create' && page=='previsions'&& "Saisie d'une prévision"} 
+                                {action == 'create' && page=='depenses' && "Saisie d'une opération effectuée"} 
+                                {action == 'edit' && page=='previsions' && "Modification d'une prévision" }
+                                {action == 'edit' && page=='depenses' && "Modification d'une opération" }
+                                {action == 'editOperation' && page=='depenses' && "Modification d'une opération" }
+                                {action == 'delete' && "Voulez-vous supprimer cette prévision ?"}
+                                {action == 'confirm' && "Cette prévision a été réalisée ?" }
                             </h5>
-                            {showSaisieForm.operationType == 'deletePrevision' ? <small className='d-block text-center mb-1 fs-6'>(si vous cliquez sur oui, la prévision sera supprimée)</small> : null}
-                            {showSaisieForm.operationType == 'confirmPrevision' ? <small className='d-block text-center mb-1 fs-6'>(si vous cliquez sur oui, cette prévision va être enregistrée comme une opération effectuée)</small> : null}
-
+                            {action == 'delete' ? <small className='d-block text-center mb-1 fs-6'>(si vous cliquez sur oui, la prévision sera supprimée)</small> : null}
+                            {action == 'confirm' ? <small className='d-block text-center mb-1 fs-6'>(si vous cliquez sur oui, cette prévision va être enregistrée comme une opération effectuée)</small> : null}
                         </div>
                         
                     </div>
                     <div className="modal-body">
-            
                         <form onSubmit={(e) => handleSubmit(e)} className="row no-gutters m-3 px-2 py-1 mb-0 scroller">
                             {/* Choix opération */}
                             <div className='groupe-type-operation d-flex text-white mb-3'>
@@ -226,7 +202,7 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                                     onChange={(e) => setLibelle(e.target.value)} 
                                     className={
                                         errors.libelle? "form-control border border-2 border-danger" : 
-                                        ((showSaisieForm.operationType=='deletePrevision' || showSaisieForm.operationType=='deleteOperation')? "form-control disabled" : "form-control")
+                                        (action=='delete' ? "form-control disabled" : "form-control")
                                     }
                                 />
                             </div>
@@ -242,7 +218,7 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                                     onChange={(e) => setDateOps(e.target.value)} 
                                     className={
                                         errors.dateOps? "form-control border border-2 border-danger" : 
-                                        ((showSaisieForm.operationType=='deletePrevision' || showSaisieForm.operationType=='deleteOperation')? "form-control disabled" : "form-control")
+                                        (action=='deletePrevision' ? "form-control disabled" : "form-control")
                                     }
                                 />
                             </div>
@@ -258,14 +234,14 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                                     onChange={(e) => setMontant(e.target.value)} 
                                     className={
                                         errors.montant? "form-control border border-2 border-danger" : 
-                                        ((showSaisieForm.operationType=='deletePrevision' || showSaisieForm.operationType=='deleteOperation')? "form-control disabled" : "form-control")
+                                        (action=='deletePrevision' ? "form-control disabled" : "form-control")
                                     }
                                 />
                             </div>
                             {errors.montant && <span className='text-danger'>{errors.montant}</span>}
                             
                             {
-                                showSaisieForm.operationType=='newOperation' && 
+                                action=='create' && 
                                 <div className="form-group d-flex mb-0" >
                                     <input 
                                         type="checkbox" 
@@ -281,14 +257,14 @@ const SaisieForm = ({showSaisieForm, toggleSaisieForm, fonctionnalite}) => {
                             }
 
                             <div id='boutons' className='d-flex justify-content-center gap-2 my-2'>
-                                {showSaisieForm.operationType=='confirmPrevision' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
-                                {showSaisieForm.operationType=='newOperation' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
-                                {showSaisieForm.operationType=='editOperation' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Modifier</button>}
-                                {showSaisieForm.operationType=='deletePrevision' && <button onClick={()=>{handleDelete()}} className='btn btn-danger'>Oui</button>}
+                                {action=='confirm' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
+                                {action=='create' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Enregistrer</button>}
+                                {action=='edit' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-primary'>Modifier</button>}
+                                {action=='delete' && <button onClick={(e)=>{handleSubmit(e)}} className='btn btn-danger'>Oui</button>}
                                 <button 
                                     type="button" 
                                     className="close bg-danger border border-secondary px-3 text-light rounded" 
-                                    onClick={()=> toggleSaisieForm(false, '', '')}>
+                                    onClick={onClose}>
                                         <span aria-hidden="true">Fermer</span>
                                 </button>
                             </div>

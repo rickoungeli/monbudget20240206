@@ -15,8 +15,8 @@ const App = () => {
       <Header />
       <Routes basename={process.env.PUBLIC_URL} >
         <Route path="/" element={<Home />} />
-        <Route path="/previsions" element={<DatesAndOperationsForm fonctionnalite='previsions' />} />
-        <Route path="/depenses" element={<DatesAndOperationsForm fonctionnalite='depenses' />} />
+        <Route path="/previsions" element={<DatesAndOperationsForm page='previsions' />} />
+        <Route path="/depenses" element={<DatesAndOperationsForm page='depenses' />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/users" element={<Users />} />
         <Route path="/register" element={<Register />} />

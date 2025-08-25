@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import SaisieForm from '../components/commons/SaisieForm';
 import { dateParser, dateParser1 } from '../utils/controllers';
@@ -7,12 +7,18 @@ import { BsPencil } from 'react-icons/bs';
 import { GiConfirmed } from "react-icons/gi";
 
 
-const Operations = ({fonctionnalite, selectedOps, dateFrom, dateTo, trierPar}) => {
-    const user = localStorage.getItem('userId')
-    const [operationsList, setOperationsList] = useState([])
-    const [errorMessage, setErrorMessage] = useState('') 
-    const [showSaisieForm, setShowSaisieForm] = useState({}) //Permet d'afficher/fermer le formulaire de saisie
-    let sortedOprationsList = []
+const Operations = ({selectedOps, dateFrom, dateTo, trierPar}) => {
+    const user = localStorage.getItem('userId');
+    const page = localStorage.getItem('page');
+    const [operationsList, setOperationsList] = useState([]);
+    const [Alert, setAlert] = useState('') ;
+    const [selectedOperation, setSelectedOperation] = useState(null);
+    const [showModal, setShowModal] = useState(false) //Permet d'afficher/fermer le formulaire de saisie
+    const [actions, setActions] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState('')
+    
+    let sortedList = []
     let totalMontant = 0
     let totalCategorie = 0
     let tableau1 = []
@@ -23,92 +29,67 @@ const Operations = ({fonctionnalite, selectedOps, dateFrom, dateTo, trierPar}) =
     useEffect(() => { 
         axios.get(`${process.env.REACT_APP_API_URL}operations.php?function=getOperations&iduser=${user}`)
         .then (res => {
-            //console.log(res.data);
-            if(!res.data) {
-                setErrorMessage('Aucune opération trouvée')
-            } else {
-                setOperationsList(res.data)
-                // setTimeout(()=> {
-                //     console.log(operationsList.length);
-                // }, 2000)    
-            }
+            setOperationsList(res.data)
+            setLoading(false)
         })
         .catch(err => {
-            setErrorMessage("Une erreur s'est produite" + err);
+            setError("Une erreur s'est produite" + err);
+            setLoading(false)
         })
     }, [])
- 
+
+
+
     const calculSomme = (montant) => {
         totalMontant += parseFloat(montant)
     }
 
-    //Fonction pour afficher/fermer le formulaire de saisie/édition d'une opération
-    const toggleSaisieForm = (value, operationType, operationItem) => {
-        if (value==true) { 
-            setShowSaisieForm({
-                value:value, 
-                operationType:operationType, 
-                operationItem:operationItem
-            })
+    const handleClose = () => setShowModal(false);
+
+    //Fonction pour mettre le state à jour et raffraichir l'écran
+    const rafreshList = (datas) => {
+        actions != 'create' && setShowModal(false);
+        if(actions == 'delete') {
+            //On supprime cette operation dans le state
+            setOperationsList(operationsList.filter((ops) => ops.id !== datas.id))
         }
-
-        if (value==false && operationType=="deleteItemFromStore") { 
-            //On supprime l'élément dans le store du parent
-            let newOperationsList = []
-            newOperationsList = operationsList.filter((operation) => operation.id != operationItem.id)
-            setOperationsList(newOperationsList)
-            //toggleSaisieForm(false, '', '')
-            setShowSaisieForm({value:value, operationType:'', operationItem:''})
-        } 
-
-        if (value==false && operationType=="editItemFromStore") { 
+        if (actions == 'edit') { 
             //On modifie l'élément dans le store du parent
-            //console.log(operationItem);
-            let newOperationsList = []  
-            
-            operationsList.forEach((operation) => {
-                if(operation.id !== operationItem.id){
-                    newOperationsList.push(operation)
-                } else {
-                    let operationItem1 = {...operationItem, isconfirmed:operation.isconfirmed}                
-                    newOperationsList.push(operationItem1)
-                    setOperationsList(newOperationsList)
-                } 
-            })
-
-            toggleSaisieForm(false, '', '')
-            setOperationsList(newOperationsList)
-            
-        } 
-        if (value==false && operationType=='' && operationItem=='') {
-            setShowSaisieForm({
-                value:false, 
-                operationType:'', 
-                operationItem:''
-            })
-            
+            setOperationsList((prevOperationsList) => 
+                prevOperationsList.map((ops) => 
+                ops.id === datas.id ? { ...ops, ...datas} : ops )
+            )           
         } 
 
-        //Ajout de l'item enregistré dans le table des opérations
-        if (value==true && operationType=='addItemToStore' && operationItem !='') {
-            let newOperationsList = []  
-            newOperationsList = operationsList
-            newOperationsList.push(operationItem)
-            setOperationsList(newOperationsList)
-            setShowSaisieForm({
-                value:true, 
-                operationType:'newOperation', 
-                operationItem:''
-            })
-        } 
-        
-    
-        
+        if (actions == 'create') {
+            console.log(datas.checkbox);
+            //on ajoute le nouveau produit dans le state
+            setOperationsList((prevList) => [...prevList, datas])
+            datas.checkbox=='false' && setShowModal(false)
+        }
     }
 
+   //Fonction pour ouvrir la modale modification, suppression et confirmation
+    const handleOpenModale = (ops, action) => {
+        setActions(action)
+        action == 'create' ? setSelectedOperation(null) : setSelectedOperation(ops)
+        // if (page == 'operations') {
+        //     action == 'create' && setFonctionnalite('createOperation') 
+        //     action == 'edit' && setFonctionnalite('editOperation') 
+        //     action = 'confirm' && setFonctionnalite('deleteOperation') 
+        // }
+        // if (page == 'previsions') {
+        //     action == 'create' && setFonctionnalite('createPrevison') 
+        //     action == 'edit' && setFonctionnalite('editPrevision') 
+        //     action == 'delete' && setFonctionnalite('deletePrevision') 
+        //     action = 'confirm' && setFonctionnalite('deletePrevision') 
+        // }
+        setShowModal(true);        
+    }
+ 
     if(trierPar == 'date' && operationsList.length > 0) {
-        sortedOprationsList = operationsList
-        .filter((operation) => fonctionnalite=='previsions'? operation.isconfirmed==0 : operation.isconfirmed==1)
+        sortedList = operationsList
+        .filter((operation) => page=='previsions'? operation.isconfirmed==0 : operation.isconfirmed==1)
         .filter((operation) => operation.idtypeops.includes(selectedOps))
         .filter((operation) => operation.dateops >= dateFrom && operation.dateops <= dateTo)
         .sort((a, b) => {
@@ -119,10 +100,9 @@ const Operations = ({fonctionnalite, selectedOps, dateFrom, dateTo, trierPar}) =
                 return -1
             }
             return 0
-        })
-        
+        })        
     }
-        
+
     if(trierPar == 'categorie') {
         /*
         operationsList
@@ -165,44 +145,45 @@ const Operations = ({fonctionnalite, selectedOps, dateFrom, dateTo, trierPar}) =
       
     }  
 
-    
-    
     return (
         <div className='page'>
             <div className="page-titre">
-                <h4 className='ps-2 my-2'>{fonctionnalite == 'previsions'? 'Liste des prévisions' : 'Liste des dépenses'}</h4>
-                {trierPar == 'date' && <button className="btn btn-primary m-1 fs-1 pt-0" onClick={() => toggleSaisieForm(true,'newOperation',{})}>+</button>}
+                <h4 className='ps-2 my-2'>{page == 'previsions'? 'Liste des prévisions' : 'Liste des dépenses'}</h4>
+                {trierPar == 'date' && <button className="btn btn-primary m-1 fs-1 pt-0" onClick={() => handleOpenModale('', 'create')}>+</button>}
             </div>
+            { loading && <div className='alert alert-success text-center mx-3 my-5 p-1 text-danger'>Chargement...</div>}   
+            { error && <div className='alert alert-danger text-center mx-3 my-5 p-1 text-danger'>{error}</div>}   
             
-            <ul className='page-ul m-0' >                
-                { sortedOprationsList.length == 0 || errorMessage? <div className='alert alert-danger text-center mx-3 my-2 p-1'>Aucune opération trouvée !!</div> : 
-                    trierPar == 'date' ?
-                    sortedOprationsList
-                    .map((operation, index) => (
+            <ul className='page-ul m-0' >  
+                { sortedList.length == 0 ? <div className='alert alert-danger text-center mx-3 my-2 p-1'>Aucune opération trouvée !!</div> : 
+                        
+                    //trierPar == 'date' ?
+                    sortedList
+                    .map((ops, index) => (
                         <li key={index}  className='d-flex gap-2 justify-content-between bg-success bg-opacity-25 mx-auto '>
 
-                            <div className='ms-1' id='date'>{dateParser(operation.dateops)}</div>
+                            <div className='ms-1' id='date'>{dateParser(ops.dateops)}</div>
                             <div className='d-flex flex-column w-50' id='operation'>
-                                <span className='text-success'>{operation.categorie}</span>
-                                <span className=''> {operation.libelle}</span>
+                                <span className='text-success'>{ops.categorie}</span>
+                                <span className=''> {ops.libelle}</span>
                             </div>
                             <div className='d-flex align-items-start gap-1' id='montantEtBoutons'>
-                                <span className='text-right text-danger'>{operation.montant} €</span>
-                                <button onClick={()=>toggleSaisieForm(true, 'editOperation', operation)} className="btn col-1 py-0"><BsPencil /></button>
-                                <button onClick={()=>fonctionnalite=='previsions' && toggleSaisieForm(true, 'deletePrevision', operation)} className="btn"><BsTrash /></button>
-                                <button onClick={()=>fonctionnalite=='previsions' && toggleSaisieForm(true, 'confirmPrevision', operation)} className="btn"><GiConfirmed  /></button>
+                                <span className='text-right text-danger'>{ops.montant} €</span>
+                                <button onClick={()=>handleOpenModale(ops, 'edit')} className="btn col-1 py-0"><BsPencil /></button>
+                                <button onClick={()=>handleOpenModale(ops, 'delete')} className="btn"><BsTrash /></button>
+                                <button onClick={()=>handleOpenModale(ops, 'confirm')} className="btn"><GiConfirmed  /></button>
                             </div>
-                            <div className="d-none">{ calculSomme(operation.montant) }</div>
+                            <div className="d-none">{ calculSomme(ops.montant) }</div>
                         </li>
-                    )) : 
-                    tableau1
-                    .map((operation, index) => (
-                        <li key={index} className ='d-flex justify-content-between p-2 bg-success bg-opacity-25 mx-auto px-3'>
-                            <div className ='ms-1 bg-success  bg-opacity-10'>{operation.categorie}</div>
-                            <div className ='ms-1 bg-success  bg-opacity-10'>{operation.montant.toFixed(2)}</div>
-                        </li>
-                    ))    
-                    } 
+                    )) 
+                    // tableau1
+                    // .map((operation, index) => (
+                    //     <li key={index} className ='d-flex justify-content-between p-2 bg-success bg-opacity-25 mx-auto px-3'>
+                    //         <div className ='ms-1 bg-success  bg-opacity-10'>{operation.categorie}</div>
+                    //         <div className ='ms-1 bg-success  bg-opacity-10'>{operation.montant.toFixed(2)}</div>
+                    //     </li>
+                    // ))    
+                }
                 
                 <div className='total-line'>
                     <span className='col-3'></span>
@@ -212,13 +193,13 @@ const Operations = ({fonctionnalite, selectedOps, dateFrom, dateTo, trierPar}) =
                 </div>
             </ul>
             
-            
-            {showSaisieForm.value && 
-                <SaisieForm 
-                    fonctionnalite={fonctionnalite} 
-                    toggleSaisieForm={toggleSaisieForm} 
-                    showSaisieForm={showSaisieForm}
-            /> }
+            <SaisieForm 
+                ops = {selectedOperation}
+                onClose = {handleClose}
+                rafreshList={rafreshList}
+                show = {showModal}
+                action = {actions}
+            /> 
         </div>
         
     );

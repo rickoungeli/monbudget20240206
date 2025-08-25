@@ -5,7 +5,7 @@ import { setLastDay } from '../utils/controllers';
 import Operations from './Operations'
 
 
-const DatesAndOperationsForm = (props) => {
+const DatesAndOperationsForm = ({page}) => {
     const operationsType = JSON.parse(localStorage.getItem('typeOperations')); //Liste des opérations
     const todaysdate = (new Date().toLocaleDateString()).split('/');  //Date du jour
     const fmonth = JSON.parse(localStorage.getItem('fmonth'))
@@ -17,6 +17,8 @@ const DatesAndOperationsForm = (props) => {
     const[dateTo, setDateTo] = useState(dateParser1(localStorage.getItem('dateTo')))
     const [errorMessage, setErrorMessage] = useState('') 
     const [selectedOperation, setSelectedOperation] = useState('')
+
+    localStorage.setItem('page', page)
     
     //Comportements   
     const onMonthClicked = e => {
@@ -171,7 +173,6 @@ const DatesAndOperationsForm = (props) => {
             </form>
             
             <Operations 
-                fonctionnalite = {props.fonctionnalite}
                 selectedOps={selectedOps}
                 dateFrom={dateFrom}
                 dateTo={dateTo}
