@@ -55,14 +55,13 @@ const Operations = ({selectedOps, dateFrom, dateTo, trierPar}) => {
         }
         if (actions == 'edit') { 
             //On modifie l'élément dans le store du parent
-            setOperationsList((prevOperationsList) => 
-                prevOperationsList.map((ops) => 
-                ops.id === datas.id ? { ...ops, ...datas} : ops )
-            )           
+            setOperationsList((prevList) => 
+                prevList.map((ops) => 
+                ops.id == datas.id ? datas : ops )
+            )        
         } 
 
         if (actions == 'create') {
-            console.log(datas.checkbox);
             //on ajoute le nouveau produit dans le state
             setOperationsList((prevList) => [...prevList, datas])
             datas.checkbox=='false' && setShowModal(false)

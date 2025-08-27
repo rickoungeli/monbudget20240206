@@ -8,7 +8,6 @@ import { checkMontant } from '../../utils/controllers';
 
 const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
     if (!show) return null; //si show est false, ne rien afficher
-
     const user = localStorage.getItem('userId')
     const page = localStorage.getItem('page')
     const operations = JSON.parse(localStorage.getItem('typeOperations'));
@@ -55,32 +54,40 @@ const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
         data.append('idcategorie', idCategorie)
 
         if (action == 'create') {
-            page == 'operations' && data.append('function', 'insertOperation')
-            page == 'previsions' && data.append('function', 'insertPrevision')
+            if(page == 'operations') {
+                data.append('function', 'insertOperation')
+                data.append('isconfirmed', 1)
+            }
+            if(page == 'previsions') {
+                data.append('function', 'insertPrevision')
+                data.append('isconfirmed', 0)
+            }
         } else {
-            action == 'edit' && data.append('function', 'editOperation')
-            action == 'delete' && data.append('function', 'deletePrevision')
-            action == 'confirm' && data.append('function', 'transformPrevision')
             data.append('idops', ops.id)
+            if(action == 'confirm') {
+                data.append('function', 'transformPrevision')
+                data.append('isconfirmed', 1)
+            } else {
+                action == 'edit' && data.append('function', 'editOperation')
+                action == 'delete' && data.append('function', 'deletePrevision')
+                data.append('isconfirmed', ops.isconfirmed)
+            }
         }
 
         axios.post(`${process.env.REACT_APP_API_URL}operations.php`, data)
         .then(res => {
-            console.log(res.data);
-
             if(res.data=='') {                          
                 setAlert("Echec : l'opération n'a pas réussi")
             } else {
                 let selectElement = document.querySelector('#categorie')
                 let selectedIndex = selectElement.selectedIndex
                 let selectedOption = selectElement.options[selectedIndex]
+                data.append('categorie', selectedOption.innerText)
                 if(res.data.status == 201){ 
                     //c'est une création, on ajoute l'élément dans le store du parent
                     setAlert('Opération enregistrée avec succès')
                     data.append('id', res.data.id,)
                     data.append('checkbox', checkbox)
-                    page == 'previsions' && data.append('isconfirmed', 0)
-                    page == 'operations' && data.append('isconfirmed', 1)
                     rafreshList(Object.fromEntries(data.entries())); //Convertit formData en objet
                     
                     if(!checkbox){
@@ -98,6 +105,7 @@ const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
                     //c'est une modification
                     //On ferme le formulaire et on modifie l'item dans le store du parent
                     setAlert('Opération modifiée avec succès')
+                    data.append('id', ops.id)
                     setTimeout(()=> {
                         setAlert('');
                         rafreshList(Object.fromEntries(data.entries())); //Convertit formData en objet
@@ -118,6 +126,7 @@ const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
                     //c'est une transformation
                     //On supprime la prévision dans le store
                     setAlert('Prévision transformée avec succès')
+                    data.append('id', ops.id)
                     setTimeout(()=> {
                         toggleSaisieForm(false, 'deleteItemFromStore', showSaisieForm.operationItem)
                     }, 2000) 
