@@ -61,6 +61,11 @@ const Operations = ({selectedOps, dateFrom, dateTo, trierPar}) => {
             )        
         } 
 
+        if(actions == 'confirm') {
+            //On modifie la rubrique isconfirmed de cette operation dans le state
+            setOperationsList(operationsList.filter((ops) => ops.id !== datas.id))
+        }
+
         if (actions == 'create') {
             //on ajoute le nouveau produit dans le state
             setOperationsList((prevList) => [...prevList, datas])
@@ -72,7 +77,7 @@ const Operations = ({selectedOps, dateFrom, dateTo, trierPar}) => {
     const handleOpenModale = (ops, action) => {
         setActions(action)
         action == 'create' ? setSelectedOperation(null) : setSelectedOperation(ops)
-        // if (page == 'operations') {
+        // if (page == 'depenses') {
         //     action == 'create' && setFonctionnalite('createOperation') 
         //     action == 'edit' && setFonctionnalite('editOperation') 
         //     action = 'confirm' && setFonctionnalite('deleteOperation') 
@@ -83,7 +88,7 @@ const Operations = ({selectedOps, dateFrom, dateTo, trierPar}) => {
         //     action == 'delete' && setFonctionnalite('deletePrevision') 
         //     action = 'confirm' && setFonctionnalite('deletePrevision') 
         // }
-        setShowModal(true);        
+        action == 'delete' && page == 'depenses' ? null : setShowModal(true);        
     }
  
     if(trierPar == 'date' && operationsList.length > 0) {

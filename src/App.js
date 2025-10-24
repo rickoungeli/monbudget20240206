@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route } from "react-router-dom";
 import Header from './components/commons/Header';
 import Home from './pages/Home';
@@ -21,7 +20,6 @@ const App = () => {
         <Route path="/users" element={<Users />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-
         <Route path="*" element={<NotFound />} />
       </Routes>
     </main>

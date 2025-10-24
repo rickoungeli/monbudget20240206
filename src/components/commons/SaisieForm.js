@@ -54,7 +54,7 @@ const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
         data.append('idcategorie', idCategorie)
 
         if (action == 'create') {
-            if(page == 'operations') {
+            if(page == 'depenses') {
                 data.append('function', 'insertOperation')
                 data.append('isconfirmed', 1)
             }
@@ -101,10 +101,15 @@ const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
                     }, 2000)  
                 }    
                     
-                if(res.data.status == 200){ 
-                    //c'est une modification
+                if(res.data.status == 200 || res.data.status == 400){ 
+                    if(res.data.status == 200) {
+                        //c'est une modification
+                        setAlert('Opération modifiée avec succès')
+                    } else {
+                        //c'est une transformation
+                        setAlert('Opération transformée avec succès')
+                    }
                     //On ferme le formulaire et on modifie l'item dans le store du parent
-                    setAlert('Opération modifiée avec succès')
                     data.append('id', ops.id)
                     setTimeout(()=> {
                         setAlert('');
@@ -122,15 +127,17 @@ const SaisieForm = ({ops, show, onClose, rafreshList, action}) => {
                     }, 2000)   
                 }
                 
-                if(res.data.status == 400){ 
-                    //c'est une transformation
-                    //On supprime la prévision dans le store
-                    setAlert('Prévision transformée avec succès')
-                    data.append('id', ops.id)
-                    setTimeout(()=> {
-                        toggleSaisieForm(false, 'deleteItemFromStore', showSaisieForm.operationItem)
-                    }, 2000) 
-                }            
+                // if(res.data.status == 400){ 
+                //     //c'est une transformation
+                //     setAlert('Opération transformée avec succès')
+                //     //On ferme le formulaire et on modifie l'item dans le store du parent
+                //     data.append('id', ops.id)
+                //     setTimeout(()=> {
+                //         setAlert('');
+                //         rafreshList(Object.fromEntries(data.entries())); //Convertit formData en objet
+                //     }, 2000) 
+                //     console.log(Object.fromEntries(data.entries()))
+                // }            
             }
         })
         .catch(err => {
